@@ -7,10 +7,6 @@ using std::clog;
 using std::left;
 using std::right;
 
-#include <iomanip>
-using std::setw;
-using std::setprecision;
-
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
@@ -20,11 +16,6 @@ using std::ios;
 #include <cstdlib>
 using std::system;
 using std::exit;
-
-#include <sstream>
-using std::ostringstream;
-using std::istringstream;
-using std::stringstream;
 
 #include <string>
 using std::string;
@@ -54,7 +45,7 @@ int main()
 
 	RegisterClass(&armyBuilder);
 
-	HWND mainWindow = CreateWindow(TEXT("armyBuilder"),TEXT("Army Configuration"),WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN,
+	HWND mainWindow = CreateWindow(TEXT("armyBuilder"),TEXT("Army Configuration"),WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL,
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,GetModuleHandle(nullptr),NULL);
 
 	ShowWindow(mainWindow,SW_SHOWNORMAL);
@@ -72,39 +63,89 @@ int main()
 	return message.wParam;
 } // end function main
 
-enum ChildIDs {UNIT_LIST_ID};
+enum ChildIDs {CODEX_LABEL_ID,CODEX_LISTBOX_ID,ARMY_LABEL_ID,ARMY_LISTBOX_ID,ADD_BUTTON_ID,REMOVE_BUTTON_ID};
 
 HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM argL)
 {
+	static const UINT cxChar = LOWORD(GetDialogBaseUnits()), cyChar = HIWORD(GetDialogBaseUnits());
 	static INT tab_stops[] = {120};
-	HWND unitList;
+	HWND codex_label,codex_listbox,army_label,army_listbox,add_button,remove_button;
 	ifstream in;
 	string name;
-	unsigned int points;
-	ostringstream entry;
 
 	switch(message)
 	{
 	case WM_CREATE:
 		SetClassLong(window,0,GetClassLong(window,0) + 1);	// increase the window count by 1
 
-		unitList = CreateWindow(TEXT("listbox"),TEXT("TEST"),WS_CHILD|WS_VISIBLE|LBS_NOTIFY|LBS_SORT|WS_BORDER|WS_VSCROLL|LBS_USETABSTOPS,
-						60,40,290,400,window,(HMENU)UNIT_LIST_ID,(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+		// create child windows
+		codex_label = CreateWindow(TEXT("static"),TEXT("Available Units:"),WS_CHILD|WS_VISIBLE|SS_LEFT,
+							3*cxChar,2*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),cyChar,window,(HMENU)CODEX_LABEL_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+		codex_listbox = CreateWindow(TEXT("listbox"),NULL,WS_CHILD|WS_VISIBLE|LBS_NOTIFY|WS_BORDER|WS_VSCROLL|LBS_USETABSTOPS,
+							3*cxChar,3*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),20*cyChar,window,(HMENU)CODEX_LISTBOX_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+		SendMessage(codex_listbox,LB_SETTABSTOPS,(WPARAM)length(tab_stops),(LPARAM)tab_stops);
 
+		army_label = CreateWindow(TEXT("static"),TEXT("Selected Units:"),WS_CHILD|WS_VISIBLE|SS_LEFT,
+							60*cxChar,2*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),cyChar,window,(HMENU)ARMY_LABEL_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+		army_listbox = CreateWindow(TEXT("listbox"),NULL,WS_CHILD|WS_VISIBLE|LBS_NOTIFY|WS_BORDER|WS_VSCROLL|LBS_USETABSTOPS,
+							60*cxChar,3*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),20*cyChar,window,(HMENU)ARMY_LISTBOX_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+		SendMessage(army_listbox,LB_SETTABSTOPS,(WPARAM)length(tab_stops),(LPARAM)tab_stops);
+
+		add_button = CreateWindow(TEXT("button"),TEXT("ADD"),WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+							47*cxChar,9*cyChar,5*cxChar,7*cyChar/4,window,(HMENU)ADD_BUTTON_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+
+		remove_button = CreateWindow(TEXT("button"),TEXT("REMOVE"),WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
+							46*cxChar,13*cyChar,8*cxChar,7*cyChar/4,window,(HMENU)REMOVE_BUTTON_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+
+		// load unit entries
 		in.exceptions(std::ios_base::failbit);
 		in.open(TEXT("units.txt"));
-
-		SendMessage(unitList,LB_SETTABSTOPS,(WPARAM)length(tab_stops),(LPARAM)tab_stops);
 		while(in)
 		{
-			getline(in,name,'\t') >> points >> std::ws;	// skip newline
-			entry << name << '\t' << points;
-			SendMessage(unitList,LB_ADDSTRING,0,(LPARAM)entry.str().c_str());
-			entry.str("");
+			getline(in,name);
+			SendMessage(codex_listbox,LB_ADDSTRING,0,(LPARAM)name.c_str());
 		} // end while
-
 		in.close();
-
+		SendMessage(codex_listbox,LB_SETCURSEL,0,0);	// why doesn't work?
+		return 0;
+	case WM_COMMAND:
+		switch(LOWORD(argW))
+		{
+		case CODEX_LISTBOX_ID:
+			if(HIWORD(argW) == LBN_DBLCLK)
+			{
+				UINT selection = SendMessage((HWND)argL,LB_GETCURSEL,0,0);
+				if(selection == LB_ERR) break;
+				UINT stringLength = SendMessage((HWND)argL,LB_GETTEXTLEN,selection,0);
+				TCHAR *buffer = new TCHAR[stringLength+1];
+				SendMessage((HWND)argL,LB_GETTEXT,selection,(LPARAM)buffer);
+				SendMessage(GetDlgItem(window,ARMY_LISTBOX_ID),LB_ADDSTRING,0,(LPARAM)buffer);
+				delete[] buffer;
+			} // end if
+			break;
+		case ARMY_LISTBOX_ID:
+			if(HIWORD(argW) == LBN_DBLCLK)
+			{
+				UINT selection = SendMessage((HWND)argL,LB_GETCURSEL,0,0);
+				if(selection == LB_ERR) break;
+				SendMessage((HWND)argL,LB_DELETESTRING,selection,0);
+			} // end if
+			break;
+		case ADD_BUTTON_ID:
+			if(HIWORD(argW) == BN_CLICKED)
+				SendMessage(window,WM_COMMAND,MAKEWPARAM(CODEX_LISTBOX_ID,LBN_DBLCLK),(LPARAM)GetDlgItem(window,CODEX_LISTBOX_ID));
+			break;
+		case REMOVE_BUTTON_ID:
+			if(HIWORD(argW) == BN_CLICKED)
+				SendMessage(window,WM_COMMAND,MAKEWPARAM(ARMY_LISTBOX_ID,LBN_DBLCLK),(LPARAM)GetDlgItem(window,ARMY_LISTBOX_ID));
+			break;
+		} // end switch
 		return 0;
 	case WM_DESTROY:
 		if(SetClassLong(window,0,GetClassLong(window,0) - 1) <= 1)	// decrease the window count by 1
