@@ -1,0 +1,38 @@
+Space Marine Chapter Master	125
+Honour Guard Squad	115
+Space Marine Captain	100
+Command Squad	115
+Space Marine Librarian	100
+Space Marine Chaplain	100
+Master Of The Forge	100
+Tactical Squad	90
+Scout Squad	75
+Sergeant Telion	50
+Rhino	35
+Razorback	40
+Drop Pod	35
+Terminator Squad	200
+Terminator Assault Squad	200
+Strrnguard Veteran Squad	125
+Venerable Dreadnought	165
+Dreadnought	105
+Ironclad Dreadnought	135
+Techmarine	50
+Servitors	10
+Legion Of The Damned Squad	155
+Assault Squad	100
+Vanguard Veteran Squad	125
+Land Speeder Squadron	50
+Space Marine Bike Squad	90
+Attack Bike Squad	40
+Land Speeder Storm	50
+Scout Bike Squad	70
+Devastator Squad	90
+Thunderfire Cannon	100
+Land Raider	250
+Land Raider Crusader	250
+Land Raider Redeemer	240
+Predator	60
+Whirlwind	85
+Vindicator	115
+Brother-Sergeant Chronus	70
