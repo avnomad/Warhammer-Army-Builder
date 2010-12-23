@@ -1,0 +1,8 @@
+syntax: regexp
+Debug/*
+Release/*
+ipch/*
+syntax: glob
+Warhammer Army Builder.opensdf
+Warhammer Army Builder.sdf
+Warhammer Army Builder.suo
