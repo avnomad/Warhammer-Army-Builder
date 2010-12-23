@@ -13,6 +13,11 @@ using std::ofstream;
 using std::fstream;
 using std::ios;
 
+#include <sstream>
+using std::ostringstream;
+using std::istringstream;
+using std::stringstream;
+
 #include <cstdlib>
 using std::system;
 using std::exit;
@@ -20,6 +25,8 @@ using std::exit;
 #include <string>
 using std::string;
 using std::getline;
+
+#include <climits>
 
 #include <windows.h>
 
@@ -63,13 +70,16 @@ int main()
 	return message.wParam;
 } // end function main
 
-enum ChildIDs {CODEX_LABEL_ID,CODEX_LISTBOX_ID,ARMY_LABEL_ID,ARMY_LISTBOX_ID,ADD_BUTTON_ID,REMOVE_BUTTON_ID};
+void addSubtrackPoints(HWND label,HWND srcListbox,UINT selection,HWND dstListbox = NULL);
+
+enum ChildIDs {CODEX_LABEL_ID,CODEX_LISTBOX_ID,ARMY_LABEL_ID,ARMY_LISTBOX_ID,ADD_BUTTON_ID,REMOVE_BUTTON_ID,
+				LEFT_TOTAL_LABEL_ID,RIGHT_TOTAL_LABEL_ID};
 
 HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM argL)
 {
 	static const UINT cxChar = LOWORD(GetDialogBaseUnits()), cyChar = HIWORD(GetDialogBaseUnits());
 	static INT tab_stops[] = {120};
-	HWND codex_label,codex_listbox,army_label,army_listbox,add_button,remove_button;
+	HWND codex_label,codex_listbox,army_label,army_listbox,add_button,remove_button,left_total_label,right_total_label;
 	ifstream in;
 	string name;
 
@@ -94,6 +104,14 @@ HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM 
 							60*cxChar,3*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),20*cyChar,window,(HMENU)ARMY_LISTBOX_ID,
 							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
 		SendMessage(army_listbox,LB_SETTABSTOPS,(WPARAM)length(tab_stops),(LPARAM)tab_stops);
+
+		left_total_label = CreateWindow(TEXT("static"),TEXT("Total:"),WS_CHILD|WS_VISIBLE|SS_LEFT,
+							60*cxChar,23*cyChar,8*cxChar,cyChar,window,(HMENU)LEFT_TOTAL_LABEL_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+		
+		right_total_label = CreateWindow(TEXT("static"),TEXT("0"),WS_CHILD|WS_VISIBLE|SS_RIGHT,
+							68*cxChar,23*cyChar,26*cxChar+GetSystemMetrics(SM_CXVSCROLL),cyChar,window,(HMENU)RIGHT_TOTAL_LABEL_ID,
+							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
 
 		add_button = CreateWindow(TEXT("button"),TEXT("ADD"),WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
 							47*cxChar,9*cyChar,5*cxChar,7*cyChar/4,window,(HMENU)ADD_BUTTON_ID,
@@ -122,11 +140,7 @@ HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM 
 			{
 				UINT selection = SendMessage((HWND)argL,LB_GETCURSEL,0,0);
 				if(selection == LB_ERR) break;
-				UINT stringLength = SendMessage((HWND)argL,LB_GETTEXTLEN,selection,0);
-				TCHAR *buffer = new TCHAR[stringLength+1];
-				SendMessage((HWND)argL,LB_GETTEXT,selection,(LPARAM)buffer);
-				SendMessage(GetDlgItem(window,ARMY_LISTBOX_ID),LB_ADDSTRING,0,(LPARAM)buffer);
-				delete[] buffer;
+				addSubtrackPoints(GetDlgItem(window,RIGHT_TOTAL_LABEL_ID),(HWND)argL,selection,GetDlgItem(window,ARMY_LISTBOX_ID));
 			} // end if
 			break;
 		case ARMY_LISTBOX_ID:
@@ -134,6 +148,7 @@ HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM 
 			{
 				UINT selection = SendMessage((HWND)argL,LB_GETCURSEL,0,0);
 				if(selection == LB_ERR) break;
+				addSubtrackPoints(GetDlgItem(window,RIGHT_TOTAL_LABEL_ID),(HWND)argL,selection);
 				SendMessage((HWND)argL,LB_DELETESTRING,selection,0);
 			} // end if
 			break;
@@ -155,3 +170,31 @@ HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM 
 
 	return DefWindowProc(window,message,argW,argL);
 } // end function armyBuilderProc
+
+
+void addSubtrackPoints(HWND label,HWND srcListbox,UINT selection,HWND dstListbox)	// that's how code should NOT be written!
+{
+	// get string from listbox
+	UINT stringLength = SendMessage(srcListbox,LB_GETTEXTLEN,selection,0);
+	TCHAR *buffer = new TCHAR[stringLength+1];
+	SendMessage(srcListbox,LB_GETTEXT,selection,(LPARAM)buffer);
+	if(dstListbox)
+		SendMessage(dstListbox,LB_ADDSTRING,0,(LPARAM)buffer);
+	// parse string to get unit points
+	int unit_points;
+	istringstream(string(buffer)).ignore(UINT_MAX,'\t') >> unit_points;
+	delete[] buffer;
+	// get string from label
+	stringLength = GetWindowTextLength(label);
+	buffer = new TCHAR[stringLength+1];
+	GetWindowText(label,buffer,stringLength+1);
+	// parse string to get total points
+	int total_points;
+	istringstream(string(buffer)) >> total_points;
+	delete[] buffer;
+	if(dstListbox)
+		total_points += unit_points;
+	else
+		total_points -= unit_points;
+	SetWindowText(label,((ostringstream&)(ostringstream() << total_points)).str().c_str());
+} // end function addSubtrackPoints
