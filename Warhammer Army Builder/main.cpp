@@ -33,7 +33,7 @@ using std::getline;
 #define length(A) (sizeof(A)/sizeof((A)[0]))
 
 
-HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM argL);
+LRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM argL);
 
 int main()
 {
@@ -75,7 +75,7 @@ void addSubtrackPoints(HWND label,HWND srcListbox,UINT selection,HWND dstListbox
 enum ChildIDs {CODEX_LABEL_ID,CODEX_LISTBOX_ID,ARMY_LABEL_ID,ARMY_LISTBOX_ID,ADD_BUTTON_ID,REMOVE_BUTTON_ID,
 				LEFT_TOTAL_LABEL_ID,RIGHT_TOTAL_LABEL_ID};
 
-HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM argL)
+LRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM argL)
 {
 	static const UINT cxChar = LOWORD(GetDialogBaseUnits()), cyChar = HIWORD(GetDialogBaseUnits());
 	static INT tab_stops[] = {120};
@@ -91,38 +91,38 @@ HRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM 
 		// create child windows
 		codex_label = CreateWindow(TEXT("static"),TEXT("Available Units:"),WS_CHILD|WS_VISIBLE|SS_LEFT,
 							3*cxChar,2*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),cyChar,window,(HMENU)CODEX_LABEL_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 		codex_listbox = CreateWindow(TEXT("listbox"),NULL,WS_CHILD|WS_VISIBLE|LBS_NOTIFY|WS_BORDER|WS_VSCROLL|LBS_USETABSTOPS,
 							3*cxChar,3*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),20*cyChar,window,(HMENU)CODEX_LISTBOX_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 		SendMessage(codex_listbox,LB_SETTABSTOPS,(WPARAM)length(tab_stops),(LPARAM)tab_stops);
 
 		army_label = CreateWindow(TEXT("static"),TEXT("Selected Units:"),WS_CHILD|WS_VISIBLE|SS_LEFT,
 							60*cxChar,2*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),cyChar,window,(HMENU)ARMY_LABEL_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 		army_listbox = CreateWindow(TEXT("listbox"),NULL,WS_CHILD|WS_VISIBLE|LBS_NOTIFY|WS_BORDER|WS_VSCROLL|LBS_USETABSTOPS,
 							60*cxChar,3*cyChar,34*cxChar+GetSystemMetrics(SM_CXVSCROLL),20*cyChar,window,(HMENU)ARMY_LISTBOX_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 		SendMessage(army_listbox,LB_SETTABSTOPS,(WPARAM)length(tab_stops),(LPARAM)tab_stops);
 
 		left_total_label = CreateWindow(TEXT("static"),TEXT("Total:"),WS_CHILD|WS_VISIBLE|SS_LEFT,
 							60*cxChar,23*cyChar,8*cxChar,cyChar,window,(HMENU)LEFT_TOTAL_LABEL_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 		
 		right_total_label = CreateWindow(TEXT("static"),TEXT("0"),WS_CHILD|WS_VISIBLE|SS_RIGHT,
 							68*cxChar,23*cyChar,26*cxChar+GetSystemMetrics(SM_CXVSCROLL),cyChar,window,(HMENU)RIGHT_TOTAL_LABEL_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 
 		add_button = CreateWindow(TEXT("button"),TEXT("ADD"),WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
 							47*cxChar,9*cyChar,5*cxChar,7*cyChar/4,window,(HMENU)ADD_BUTTON_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 
 		remove_button = CreateWindow(TEXT("button"),TEXT("REMOVE"),WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON,
 							46*cxChar,13*cyChar,8*cxChar,7*cyChar/4,window,(HMENU)REMOVE_BUTTON_ID,
-							(HINSTANCE)GetWindowLong(window,GWL_HINSTANCE),NULL);
+							(HINSTANCE)GetWindowLongPtr(window,GWLP_HINSTANCE),NULL);
 
 		// load unit entries
-		in.exceptions(std::ios_base::failbit);
+		//in.exceptions(std::ios_base::failbit);
 		in.open(TEXT("units.txt"));
 		while(in)
 		{
