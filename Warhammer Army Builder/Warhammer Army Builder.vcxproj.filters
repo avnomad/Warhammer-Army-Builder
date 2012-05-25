@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{3cfe4841-8c6c-45f1-9b53-7334c561a6dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -22,6 +25,12 @@
   <ItemGroup>
     <None Include="units.txt">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="design 1.jpg">
+      <Filter>Documentation</Filter>
+    </None>
+    <None Include="design 2.jpg">
+      <Filter>Documentation</Filter>
     </None>
   </ItemGroup>
 </Project>
