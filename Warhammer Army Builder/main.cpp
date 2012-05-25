@@ -145,7 +145,7 @@ LRESULT CALLBACK armyBuilderProc(HWND window, UINT message, WPARAM argW, LPARAM 
 		while(in)
 		{
 			getline(in,name);
-			if(2 < name.size() && name[0] != '/' && name[1] != '*')	// skip comment header
+			if(2 < name.size() && name[0] != '/' && name[1] != '*')	// if not a comment
 				SendMessage(codex_listbox,LB_ADDSTRING,0,(LPARAM)name.c_str());
 		} // end while
 		in.close();
